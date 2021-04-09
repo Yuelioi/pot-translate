@@ -1,0 +1,45 @@
+from pygoogletranslation import Translator
+from popy.po_file import PoFile
+
+def tran_google(src_list,src_lang ='en'):
+    translator = Translator()
+    fin_str = ''
+
+    if len(src_list) > 30:
+        src_cache = [src_list[i:i + 30] for i in range(len(src_list)) if i % 30 == 0]
+        src_len = len(src_cache)
+        for i in range(0, src_len):
+            src_cache2 = '\n'.join('%s' % id for id in src_cache[i])
+            fin_str = fin_str  + translator.translate(src_cache2,dest="zh-CN").text + '\n'
+        print(fin_str.split('\n')[:-1])
+        return fin_str.split('\n')[:-1]
+    else:
+        src_txt = '\n'.join(src_list)
+        fin_str = translator.translate(src_txt, dest="zh-CN").text
+        return fin_str
+
+def tran_po(pathIn,pathOut):
+    # 调用PoFile模块用于解析
+    f = PoFile(path=pathIn)
+    mes = f.get_messages()
+
+    # 获取要翻译的列表
+    print('获取翻译列表')
+    toTranList = []
+    for i in range(len(mes)):
+        cont = mes[i].msgid
+        if '%' not in cont and '\\' not in cont and '{' not in cont and len(cont)>5 and len(mes[i].msgstr[0])<3: toTranList.append(cont) # 翻译列表 print('开始翻译') trList = tran_google(toTranList) # 修改内容 print('修改内容') tLoop = 0 for i in range(len(mes)): cont = mes[i].msgid if '%' not in cont and '\\' not in cont and '{' not in cont and len(cont)>5 and len(mes[i].msgstr[0])<3:
+            t = trList[tLoop]
+            if t.endswith('.'):
+                mes[i].msgstr =[t[:-1]]
+            else:
+                mes[i].msgstr =[t]
+            tLoop += 1
+    # 写入
+    print('开始写入')
+    f2 = PoFile(path=pathOut)
+    f2.write_messages(mes)
+if __name__ == '__main__':
+    path1 = r'C:\Users\XX.po'
+    path2 = r'C:\Users\XX-OUT.po'
+    tran_po(path1,path2)
